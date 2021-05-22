@@ -11,7 +11,7 @@ import routes from "./router/index";
 import { Session } from "@shopify/shopify-api/dist/auth/session";
 import { updateTheme } from "./updateTheme/updateTheme";
 
-import {receiveWebhook, registerWebhook} from '@shopify/koa-shopify-webhooks';
+//import {receiveWebhook, registerWebhook} from '@shopify/koa-shopify-webhooks';
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -96,22 +96,37 @@ app.prepare().then(async () => {
           console.log('APP_UNINSTALLED registered',response.result);
         }
         */
-        // const CartCreateResponse = await Shopify.Webhooks.Registry.register({
-        //   shop,
-        //   accessToken,
-        //   path: "/addtocart",
-        //   topic: "CARTS_CREATE",
-        //   webhookHandler: async (topic, shop, body) =>{}
-        //     //delete ACTIVE_SHOPIFY_SHOPS[shop],
-        // });
-        // if (!CartCreateResponse.success) {
-        //   console.log(
-        //     `Failed to register CARTS_CREATE webhook: ${CartCreateResponse.result}`
-        //   );
-        // }else{
-        //   console.log(`CARTS_CREATE registered ${CartCreateResponse.result}`);
-        // }
+        const CartCreateResponse = await Shopify.Webhooks.Registry.register({
+          shop,
+          accessToken,
+          path: "/webhooks/carts/create",
+          topic: "CARTS_CREATE",
+          webhookHandler: async (topic, shop, body) =>{}
+        });
+        if (!CartCreateResponse.success) {
+          console.log(
+            `Failed to register CARTS_CREATE webhook: ${CartCreateResponse.result}`
+          );
+        }else{
+          console.log(`CARTS_CREATE registered ${CartCreateResponse.result}`);
+        }
 
+        const CartUpdateResponse = await Shopify.Webhooks.Registry.register({
+          shop,
+          accessToken,
+          path: "/webhooks/carts/update",
+          topic: "CARTS_UPDATE",
+          webhookHandler: async (topic, shop, body) =>{}
+        });
+        if (!CartUpdateResponse.success) {
+          console.log(
+            `Failed to register CARTS_UPDATE webhook: ${CartUpdateResponse.result}`
+          );
+        }else{
+          console.log(`CARTS_UPDATE registered ${CartUpdateResponse.result}`);
+        }
+
+        /*
         const webHookProdcutCreate = await registerWebhook({
           address: process.env.HOST+'/webhooks/products/create',
           topic: 'PRODUCTS_CREATE',
@@ -161,7 +176,7 @@ app.prepare().then(async () => {
         }else{
           console.log("Add to cart update webhook faild",webHookAddToCartUpdate)
         }
-
+        */
         console.log("Start updating theme");
         updateTheme(shop, accessToken);
 
@@ -188,39 +203,48 @@ app.prepare().then(async () => {
     }
   });
 
-  /*
+  
   router.post("/webhooks/carts/create", async (ctx) => {
     try {
       await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
       console.log(`Webhook processed, returned status code 200`);
+
+      //want to trigger update custom price 
     } catch (error) {
       console.log(`Failed to process webhook: ${error}`);
     }
   });
-  */
+  router.post("/webhooks/carts/update", async (ctx) => {
+    try {
+      await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
+      console.log(`Webhook processed, returned status code 200`);
 
+      //want to trigger update custom price 
+    } catch (error) {
+      console.log(`Failed to process webhook: ${error}`);
+    }
+  });
+  
+  /*
   const webhook = receiveWebhook({secret: process.env.SHOPIFY_API_SECRET});
 
   router.post('/webhooks/products/create', webhook, () => {
-    /* handle products create */
     console.log('product create webhook')
   });
   router.post('/webhooks/orders/create', webhook, () => {
-    /* handle orders create */
     console.log('handle orders create')
   });
   router.post('/webhooks/carts/create', webhook, () => {
     //console.log(ctx.req)
     //console.log(ctx.response)
-    /* handle orders create */
     console.log('handle carts create')
   });
   router.post('/webhooks/carts/update', webhook, () => {
     //console.log(ctx.response)
     //console.log(ctx.req)
-    /* handle orders create */
     console.log('handle carts update')
   });
+  */
   async function injectSession(ctx, next) {
     const session = await Shopify.Utils.loadCurrentSession(ctx.req, ctx.res);
     ctx.sesionFromToken = session;

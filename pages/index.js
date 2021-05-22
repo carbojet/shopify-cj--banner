@@ -5,7 +5,6 @@ import ProductEmptyState from "../components/ProductEmptyState";
 import ProductList from "../components/ProductList";
 import ProductPage from "../components/ProductPage";
 import store from "store-js";
-import Axios from 'axios';
 
 function index({ shopOrigin }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,13 +16,7 @@ function index({ shopOrigin }) {
       setProducts(productList);
     }
   }, []);
-  useEffect( async () =>{
-    await Axios.get('/api/products').then((response)=>{
-      console.log(response)
-    }).catch((error)=>{
-      console.log(error)
-    })
-  })
+
   useEffect(() => {
     
     const ids = products.map((product) => {
