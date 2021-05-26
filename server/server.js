@@ -10,8 +10,7 @@ import fs from "fs";
 import routes from "./router/index";
 import { Session } from "@shopify/shopify-api/dist/auth/session";
 import { updateTheme } from "./updateTheme/updateTheme";
-
-//import {receiveWebhook, registerWebhook} from '@shopify/koa-shopify-webhooks';
+import Axios from "axios";
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -58,12 +57,14 @@ Shopify.Context.initialize({
   SESSION_STORAGE: sessionStorage,
 });
 
+//storefront aceess token storage
+//const STOREFRONT_ACCESSTOKEN = {};
 // Storing the currently active shops in memory will force them to re-login when your server restarts. You should
 // persist this object in your app.
 const ACTIVE_SHOPIFY_SHOPS = {};
 const session = loadCallback();
 if (session?.shop && session?.scope) {
-  console.log("session", session);
+  //console.log("session", session);
   ACTIVE_SHOPIFY_SHOPS[session.shop] = session.scope;
 }
 
@@ -77,31 +78,40 @@ app.prepare().then(async () => {
         // Access token and shop available in ctx.state.shopify
         const { shop, accessToken, scope } = ctx.state.shopify;
         ACTIVE_SHOPIFY_SHOPS[shop] = scope;
-
-        /*
-        const response = await Shopify.Webhooks.Registry.register({
-          shop,
-          accessToken,
-          path: "/webhooks/carts/create",
-          topic: "CARTS_CREATE",
-          webhookHandler: async (topic, shop, body) =>{}
-            //delete ACTIVE_SHOPIFY_SHOPS[shop],
-        });
-
-        if (!response.success) {
-          console.log(
-            `Failed to register APP_UNINSTALLED webhook: ${response.result}`
-          );
-        }else{
-          console.log('APP_UNINSTALLED registered',response.result);
-        }
-        */
+        console.log(accessToken)
+        // const adminApiClient = await new Shopify.Clients.Rest(shop,accessToken);
+        // const storefrontTokenResponse = await adminApiClient.post({
+        //   path: 'storefront_access_tokens',
+        //   type: DataType.JSON,
+        //   data: {
+        //     "storefront_access_token": {
+        //       "title": "This is my test access token",
+        //     }
+        //   },
+        // })
+        // STOREFRONT_ACCESSTOKEN[shop] = storefrontTokenResponse
+        // console.log(storefrontTokenResponse)
+        
         const CartCreateResponse = await Shopify.Webhooks.Registry.register({
           shop,
           accessToken,
           path: "/webhooks/carts/create",
           topic: "CARTS_CREATE",
-          webhookHandler: async (topic, shop, body) =>{}
+          webhookHandler: async (topic, shop, body) =>{
+            const cart = JSON.parse(body)
+            console.log(cart)
+            
+            cart.line_items.map((item)=>{
+              if(item.hasOwnProperty('properties')){
+                //console.log('has property')
+                //console.log(item.properties["calculated price"])
+                handleCartUpdate(shop,item,accessToken,cart.id);
+              }
+            })
+            // const result = handleCartUpdate(shop,body,accessToken);
+            // console.log(result)
+            
+          }
         });
         if (!CartCreateResponse.success) {
           console.log(
@@ -110,13 +120,25 @@ app.prepare().then(async () => {
         }else{
           console.log(`CARTS_CREATE registered ${CartCreateResponse.result}`);
         }
-
+        
         const CartUpdateResponse = await Shopify.Webhooks.Registry.register({
           shop,
           accessToken,
           path: "/webhooks/carts/update",
           topic: "CARTS_UPDATE",
-          webhookHandler: async (topic, shop, body) =>{}
+          webhookHandler: async (topic, shop, body) =>{
+            const cart = JSON.parse(body)
+            console.log(cart)
+            
+            cart.line_items.map((item)=>{
+              if(item.hasOwnProperty('properties')){
+                handleCartUpdate(shop,item,accessToken,cart.id);
+              }
+            })
+            
+            // const result = handleCartUpdate(shop,body,accessToken);
+            // console.log(result)
+          }
         });
         if (!CartUpdateResponse.success) {
           console.log(
@@ -125,58 +147,7 @@ app.prepare().then(async () => {
         }else{
           console.log(`CARTS_UPDATE registered ${CartUpdateResponse.result}`);
         }
-
-        /*
-        const webHookProdcutCreate = await registerWebhook({
-          address: process.env.HOST+'/webhooks/products/create',
-          topic: 'PRODUCTS_CREATE',
-          accessToken,
-          shop,
-          apiVersion: ApiVersion.Unstable
-        });
-        if(webHookProdcutCreate.success){
-          console.log('product create web hook added')
-        }
-
-        const webHookOrderCreate = await registerWebhook({
-          address: process.env.HOST+'/webhooks/orders/create',
-          topic: 'ORDERS_CREATE',
-          accessToken,
-          shop,
-          apiVersion: ApiVersion.Unstable
-        });
-        if(webHookOrderCreate.success){
-          console.log('Order create web hook added')
-        }else{
-          console.log("order create webhook faild",webHookOrderCreate)
-        }
-
-        const webHookAddToCart = await registerWebhook({
-          address: process.env.HOST+'/webhooks/carts/create',
-          topic: 'CARTS_CREATE',
-          accessToken,
-          shop,
-          apiVersion: ApiVersion.Unstable
-        });
-        if(webHookAddToCart.success){
-          console.log('Add to cart web hook added')
-        }else{
-          console.log("Add to cart webhook faild",webHookAddToCart)
-        }
-
-        const webHookAddToCartUpdate = await registerWebhook({
-          address: process.env.HOST+'/webhooks/carts/update',
-          topic: 'CARTS_UPDATE',
-          accessToken,
-          shop,
-          apiVersion: ApiVersion.Unstable
-        });
-        if(webHookAddToCartUpdate.success){
-          console.log('Add to cart update web hook added')
-        }else{
-          console.log("Add to cart update webhook faild",webHookAddToCartUpdate)
-        }
-        */
+        
         console.log("Start updating theme");
         updateTheme(shop, accessToken);
 
@@ -185,7 +156,7 @@ app.prepare().then(async () => {
       },
     })
   );
-
+  
   const handleRequest = async (ctx) => {
     await handle(ctx.req, ctx.res);
     ctx.respond = false;
@@ -204,10 +175,124 @@ app.prepare().then(async () => {
   });
 
   
+  const handleCartUpdate = async (shop,item,accessToken,cartId) =>{
+    const newPrice = (Number(item.price)+ Number(item.properties['calculated price']))+'.00';
+    const variant = {
+      variant: {
+        id:item.id,
+        price: newPrice,
+      }
+    }
+    const apiURL = 'https://'+shop+'/admin/api/2021-01/variants/'+item.id+'.json';
+    console.log("api url :",apiURL)
+    Axios.put(apiURL,variant,{
+      headers:{
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": accessToken,
+      }
+    })
+    .then(async (response)=>{
+      console.log('result data',response)      
+      removeCart(item,cartId,shop,accessToken).then((res)=>{
+        //addItemcart(response.data.variant,cartId,shop,accessToken);
+      })
+
+    },(error)=>{console.log("first error:",error)})
+    .catch((error) =>{
+      console.log('second error',error)
+    })
+    
+
+  }
+  
+//******* */
+
+  const removeCart = (removeItem,cartId,shop,accessToken) => {
+    return new Promise((resolve,reject) => {
+      fetch("https://"+shop+"/api/2021-01/graphql.json", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/graphql",
+          "X-Shopify-Storefront-Access-Token": '55ece1b3dab0dc5eadef8b865fa3b6e3'
+        },
+        body: JSON.stringify({
+          "query": `mutation checkoutLineItemsRemove($checkoutId: ID!, $lineItemIds: [ID!]!) {
+                checkoutLineItemsRemove(checkoutId: $checkoutId, lineItemIds: $lineItemIds) {
+                  checkout {
+                    id
+                  }
+                  checkoutUserErrors {
+                    code
+                    field
+                    message
+                  }
+                }
+              }`,
+          "variables":  {
+              "checkoutId":cartId,
+              "lineItemIds":[removeItem.id]
+          }
+        })
+      }).then((response)=>{
+        console.log('remove response ',response)    
+        resolve(response);   
+      }).catch(error =>{
+        console.log('remove error ',error)
+        reject(error);
+      })
+    })
+  
+}
+
+const addItemcart = (addItem,cartId,shop,accessToken) => {
+  return new Promise((resolve,reject) => {
+    fetch("https://"+shop+"/api/2021-01/graphql.json", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "X-Shopify-Access-Token": '55ece1b3dab0dc5eadef8b865fa3b6e3'
+      },
+      body: JSON.stringify({
+        "query": `mutation checkoutLineItemsAdd($lineItems: [CheckoutLineItemInput!]!, $checkoutId: ID!) {
+            checkoutLineItemsAdd(lineItems: $lineItems, checkoutId: $checkoutId) {
+              checkout {
+                id
+              }
+              checkoutUserErrors {
+                code
+                field
+                message
+              }
+            }
+          }`,
+        "variables":  {
+            "lineItems": [
+                {
+                    "quantity": "1",
+                    "variantId": addItem.id
+                }
+            ],
+            "checkoutId": cartId
+        }
+      })
+    }).then((response)=>{
+      console.log('add response ',response)    
+      resolve(response);
+    }).catch(error =>{
+      console.log('add error ',error)
+      reject(error);
+    })
+  })
+  
+}
+
+//******* */
+
   router.post("/webhooks/carts/create", async (ctx) => {
     try {
-      await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
-      console.log(`Webhook processed, returned status code 200`);
+      const result = await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
+      console.log(`Webhook processed, returned status code 200 `);
 
       //want to trigger update custom price 
     } catch (error) {
@@ -216,35 +301,14 @@ app.prepare().then(async () => {
   });
   router.post("/webhooks/carts/update", async (ctx) => {
     try {
-      await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
-      console.log(`Webhook processed, returned status code 200`);
-
+      const result = await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
+      console.log(`Webhook processed, returned status code 200 `);      
       //want to trigger update custom price 
     } catch (error) {
       console.log(`Failed to process webhook: ${error}`);
     }
   });
-  
-  /*
-  const webhook = receiveWebhook({secret: process.env.SHOPIFY_API_SECRET});
 
-  router.post('/webhooks/products/create', webhook, () => {
-    console.log('product create webhook')
-  });
-  router.post('/webhooks/orders/create', webhook, () => {
-    console.log('handle orders create')
-  });
-  router.post('/webhooks/carts/create', webhook, () => {
-    //console.log(ctx.req)
-    //console.log(ctx.response)
-    console.log('handle carts create')
-  });
-  router.post('/webhooks/carts/update', webhook, () => {
-    //console.log(ctx.response)
-    //console.log(ctx.req)
-    console.log('handle carts update')
-  });
-  */
   async function injectSession(ctx, next) {
     const session = await Shopify.Utils.loadCurrentSession(ctx.req, ctx.res);
     ctx.sesionFromToken = session;

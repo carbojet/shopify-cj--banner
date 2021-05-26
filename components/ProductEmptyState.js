@@ -11,7 +11,7 @@ function ProductEmptyState({ setIsOpen }) {
       }}
       image="https://cdn.shopify.com/s/files/1/0757/9955/files/empty-state.svg"
     >
-      <p>Select the products you want to use on your banner</p>
+      <p>Select the products you want to use on ace interior</p>
     </EmptyState>
   );
 }
