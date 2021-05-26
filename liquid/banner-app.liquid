@@ -1,5 +1,358 @@
-<div style="background-color:limegreen">
-  <body style="text-align:center; color:black">
-    <p> This was created by the banner app, current page is {{page_title}}</p>
-  </body>
+<style>
+  .tab-container {
+      width: 100%;
+      display: block;
+  }
+  .tab-head .tabs ul:after{
+  	content:'';
+    display:block;
+    clear:both;
+  }
+  .tab-head .tabs ul li {
+      background-color: #efefef;
+      display: inline-block;
+      float: left;
+  }
+  .tab-body .tab-content{
+  	display:none;
+  }
+  .tab-head .tabs ul li a {
+      padding: 7px 15px;
+      display: block;
+  }
+  .tab-head .tabs ul li a.active{
+  	background-color:#e5eff0;
+  }
+  .tab-content.active{
+    background-color:#e5eff0;
+    display:block;
+  }
+  .tab-body {
+      background-color: #efefef;
+  }
+  .custom_product_form{
+  	padding:15px;
+  }
+  .custom_product_form hr {
+      display: block;
+      height: 1px;
+      border: 0;
+      border-top: 1px solid #ccc;
+      margin: 1em 0;
+      padding: 0;
+  }
+  .flex-wrapper {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+  }
+  .curtain_images {
+      text-align: center;
+      width: 32.5%;
+      padding: 5px;
+      border-color: #0f0f0f;
+      cursor: pointer;
+  }
+</style>
+<input type="hidden" id="calculated_price" value="25.00" name="properties[calculated price]" />
+<div class="tab-container">
+  <div class="tab-head">
+    <div class="tabs">
+      <ul>
+        <li><a href="#roman-blinds" class="nav-tab active">Roman Blinds</a></li>
+        <li><a href="#curtains" class="nav-tab">Curtains</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="tab-body">
+    <div class="tab-content active" id="roman-blinds">
+      
+      <div class="custom_product_form">
+        <label>SELECT HEADING STYLE
+          <a tabindex="0" data-toggle="modal" data-target="#headingBlindsGuideModal" class="calc-tooltip">
+            <i class="fas fa-info-circle"></i>
+          </a>
+        </label>
+        <div class="form-group flex-wrapper">
+          <div id="4" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/romans_waterfall.svg?v=16452063480204016947" alt="">
+            <span>Waterfall Stacked</span>
+          </div>
+          <div id="21" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/romans_standard.svg?v=9433114156772270074" alt=""> 
+            <span>Standard Stacked</span>
+          </div>
+          <span style="color: red;"></span>
+        </div>
+        <hr>
+        <label>LININGS
+          <a tabindex="0" data-toggle="modal" data-target="#liningModal" class="calc-tooltip">
+            <i class="fas fa-info-circle"></i>
+          </a>
+        </label>
+        <div class="form-group">          
+          <p class="line-item-property__field">
+            <label>LININGS</label><br>
+            <select id="linings" name="properties[linings]">
+              	<option value="" selected="selected">Please select...</option>
+              	<option data-type="Unlined" value="58">Machine Finished Unlined</option>
+            	<option data-type="Lined" value="59">Machine Finished Lined</option>
+            </select>
+          </p>
+        </div>
+        <hr>
+        <label>MEASUREMENTS
+          <a tabindex="0" data-toggle="modal" data-target="#measuringBlindsGuideModal" class="calc-tooltip">
+            <i class="fas fa-info-circle"></i>
+          </a>
+        </label>
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="form.width">Track / Pole Width</label>
+            <input type="number" class="form-control" id="track_polowidth" name="properties[track or polo width]">
+            <span style="color: red;"></span>
+          </div>
+          <div class="col-md-6 form-group">
+            <label for="form.drop">Finished Length</label>
+            <input type="number" class="form-control" id="finished_length" name="properties[finished length]">
+            <span style="color: red;"></span>
+          </div>
+        </div>
+        <div class="radios">
+          <label>UNIT OF MEASURE</label>
+          <div class="radio">
+            <label class="radio-inline">
+              <input type="radio" value="cm" id="unit_of_measure" name="properties[unit of measure]" > CM
+            </label>
+          </div>
+          <div class="radio">
+            <label class="radio-inline">
+              <input type="radio" value="inch" id="unit_of_measure" name="properties[unit of measure]" > INCHES
+            </label>
+          </div>
+        </div>
+        <hr>
+        <div class="radios">
+          <label>CHAIN POSITION</label>
+          <div class="radio">
+            <label class="radio-inline">
+              <input type="radio" value="Left" id="chain_position" name="properties[chain position]"> Left
+            </label>
+          </div>
+          <div class="radio">
+            <label class="radio-inline">
+              <input type="radio" value="Right" id="chain_position" name="properties[chain position]"> Right 
+            </label>
+          </div>
+          <span style="color: red;"></span>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-lg-4 col-lg-offset-4">
+            <div class="form-group">
+              <button type="button" class="button alt" name="calculate">CALCULATE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="curtains">
+      <div class="custom_product_form">
+        <label>CHOOSE CURTAIN STYLE
+          <a tabindex="0" data-toggle="modal" data-target="#headingcurtainGuideModal" class="calc-tooltip">
+            <i class="fas fa-info-circle"></i>
+          </a>
+        </label>
+        <div class="form-group flex-wrapper">
+          <div id="19" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/goblet_pleat.svg?v=17388677261062878621" alt="">
+            <span>Goblet Pleat</span>
+          </div>
+          <div id="25" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/single_pinch_pleat.svg?v=6368772634549644320" alt="">
+            <span>Single Pinch Pleat</span>
+          </div>
+          <div id="42" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/double_pinch.svg?v=7915259021315886068" alt="">
+            <span>Double Pinch Pleat</span>
+          </div>
+          <div id="50" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/pencil_pleat.svg?v=11016085370893930590" alt="">
+            <span>Pencil Pleat</span>
+          </div>
+          <div id="54" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/double_pinch.svg?v=7915259021315886068" alt="">
+            <span>4" French Double Pleat</span>
+          </div>
+          <div id="55" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/single_pinch_pleat.svg?v=6368772634549644320" alt="">
+            <span>Single Pinch Pleat</span>
+          </div>
+          <div id="56" class="curtain_images">
+            <img src="//cdn.shopify.com/s/files/1/0568/5637/9583/t/1/assets/eyelet.svg?v=7374966720164467603" alt="">
+            <span>Eyelet</span>
+          </div>
+          <span style="color: red;"></span>
+        </div>
+        <hr>
+        <label for="curtain_type">CURTAIN TYPE </label>
+        <div class="radios">
+          <div class="radio">
+            <label class="radio-inline">
+              <input type="radio" value="yes" id="curtain_type" name="properties[curtain type]"> Pair
+            </label>
+          </div>
+          <div class="radio">
+            <label class="radio-inline">
+              <input type="radio" value="no" id="curtain_type" name="properties[curtain type]"> Single
+            </label>
+          </div>
+        </div>
+        <hr>
+        <label>MEASUREMENTS
+          <a tabindex="0" data-toggle="modal" data-target="#measuringCurtainGuideModal" class="calc-tooltip">
+            <i class="fas fa-info-circle"></i>
+          </a>
+        </label>
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="form.width">Track/Pole Width</label>
+            <input type="number" class="form-control" id="track_polo_width" name="properties[track or polo width]">
+            <span style="color: red;"></span>
+          </div>
+          <div class="col-md-6 form-group">
+            <label for="form.drop">Finished Length</label>
+            <input type="number" class="form-control" id="finished_length" name="properties[finished length]">
+            <span style="color: red;"></span>
+          </div>
+        </div>
+        <div class="radios">
+          <label>UNIT OF MEASURE</label>
+          <div class="radio">
+            <label class="radio-inline">
+              <input type="radio" value="cm" id="unit_of_measure" name="properties[unit of measure]"> CM
+            </label>
+          </div>
+          <div class="radio">
+            <label class="radio-inline">
+              <input type="radio" value="inch" id="unit_of_measure" name="properties[unit of measure]"> INCHES
+            </label>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-lg-4 col-lg-offset-4">
+            <div class="form-group">
+              <button type="button" class="button alt" name="calculate">CALCULATE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+<script>
+  window.addEventListener('DOMContentLoaded', function() {
+    
+    const tabs = document.querySelectorAll('.nav-tab');
+
+    var product = {{ product | json }}
+	console.log(product)
+    var current_variant_id =document.querySelector('.product-form__variants')[0].value
+    //console.log(product.variants,current_variant_id)
+    var current_variant = product.variants.map(variant => { if(variant.id==current_variant_id){ return variant;}else{return null;} })
+    console.log(current_variant)
+
+    tabs.forEach(clickedTab => {
+        // Add onClick event listener on each tab
+        clickedTab.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Remove the active class from all the tabs (this acts as a "hard" reset)
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                document.querySelector(tab.getAttribute('href')).classList.remove('active')
+            });
+
+            // Add the active class on the clicked tab
+            clickedTab.classList.add('active');
+            document.querySelector(e.currentTarget.getAttribute('href')).classList.add('active')
+        });
+    });
+    document.querySelectorAll('button[name="calculate"]').forEach( button => {
+      button.addEventListener('click',(e) => {
+
+        var aceForm = e.currentTarget.closest('.custom_product_form')
+        
+        var calculated_price = aceForm.querySelector('input[id="calculated_price"]').value
+        var salePrice = document.querySelector("[data-sale-price]").innerHTML.match(/([0-9]*[.])?[0-9]+/g)[0];
+        var currency = document.querySelector("[data-sale-price]").innerHTML.match(/.{0}[A-Za-z.]{3}/g)[0]
+        var regularPrice = document.querySelector("[data-regular-price]").innerHTML.match(/([0-9]*[.])?[0-9]+/g)[0];
+        console.log(regularPrice)
+        var newRegularPrice = Number(calculated_price)+Number(regularPrice);
+        document.querySelector("[data-sale-price]").innerHTML = currency+' '+newRegularPrice.toFixed(2);
+        document.querySelector("[data-regular-price]").innerHTML = currency+' '+newRegularPrice.toFixed(2);
+        
+        
+      })
+      
+    })
+    
+    
+    
+  })
+  $('document').ready(function(){
+    
+    $("body").on("click","button[name=calculate]",function(){
+      
+    	var product = {{ product | json }}
+        var product_id = product.id;
+      	var variant_id =document.querySelector('.product-form__variants')[0].value
+      console.log(variant_id)
+      	var api_key = '191eac0e7beb9eab6612b28e5ae1ae39';
+      	var api_password = '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';
+        var shop_name = 'ace-mahendra';
+      	var urlAddVar = "https://"+api_key+":"+api_password+"@"+shop_name+".myshopify.com/admin/api/2021-04/products/"+product_id+"/variants.json";
+      	var urlGetVar = "https://"+api_key+":"+api_password+"@"+shop_name+".myshopify.com/admin/api/2021-04/variants/"+variant_id+".json";
+
+      var postData = new Object();
+      postData.variant = new Object();
+      postData.variant.id = variant_id;
+       postData.variant.price = '120';
+//       $.post('/cart/change.js',{ variant_id: variant_id, price: 200 },function(data){
+//         console.log(data)
+//       })
+//       console.log(postData)
+ 
+        $.ajax({  
+          url:'/cart/update.js',  
+          type:'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ "variant_id": variant_id, "price": "200" }),  
+          success: function (data, textStatus, xhr) {  
+            console.log(xhr)
+            console.log(JSON.parse(data));  
+          },  
+          error: function (xhr, textStatus, errorThrown) {  
+            console.log('Error in Operation',xhr);  
+          }  
+        });  
+//       let data = {"key":"value"}
+
+//       $.ajax({
+//           type: 'PUT',
+//           url: urlGetVar,
+//           contentType: 'application/json',
+//           data: JSON.stringify(postData), // access in body
+//       }).done(function (data) {
+        
+//           console.log('SUCCESS');
+//         console.log(data);
+//       }).fail(function (msg) {
+//           console.log('FAIL');
+//       }).always(function (msg) {
+//           console.log('ALWAYS');
+//       });
+        
+    })
+  })
+</script>
